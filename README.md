@@ -2,6 +2,8 @@
 
 An interactive, open-source lesson in **J Dilla's** drum-programming feel — with an always-on **MPC-style pad grid** that stays beside every lesson.
 
+Created by **@tonyInteractive** of **@park8.io**
+
 No samples, no dependencies, no build step. It's a single `index.html` that synthesizes every drum in your browser with the Web Audio API.
 
 **[▶ Live demo](#)** · MIT licensed · runs offline

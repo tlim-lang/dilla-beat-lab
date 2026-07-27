@@ -4,186 +4,308 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dilla Beat Lab — Learn the feel on an MPC-style grid</title>
-<meta name="description" content="An interactive, open-source lesson in J Dilla's drum-programming technique. Six lessons, a live Web-Audio beat machine, and an always-on MPC-style pad grid.">
+<meta name="description" content="An interactive, open-source lesson in J Dilla's drum-programming technique. Six lessons, a live Web-Audio beat machine, and an always-on MPC-style pad grid. Created by @tonyInteractive of @park8.io">
+<meta property="og:title" content="Dilla Beat Lab">
+<meta property="og:description" content="Learn J Dilla's drum feel on an interactive MPC-style grid. Six lessons, all Web Audio, no samples.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-<!--WIDGET_START-->
 <style>
   :root{
-    --bg:#0e0e10; --panel:#17171b; --panel2:#1e1e24; --edge:#2a2a31;
-    --ink:#f4f1ea; --muted:#9a978f; --red:#e0392b; --red2:#b71f16;
-    --amber:#ffb347; --lcd:#7fe0a8; --lcdbg:#0a1a12;
-    --pad:#2b2b31; --pad-hi:#3a3a42; --accent:#ffcf5c;
-    --grid-on:#e0392b; --grid-acc:#ffcf5c; --grid-ghost:#5a5a66;
-    --font: "Helvetica Neue", Arial, sans-serif;
-    --mono: "SFMono-Regular", Consolas, "Roboto Mono", monospace;
+    --bg:#0b0b0d; --chassis:#191a1f; --chassis2:#121317; --steel:#22242b; --edge:#2c2e37; --edge2:#3a3d49;
+    --ink:#f2efe6; --muted:#8f8d85; --dim:#5c5b55;
+    --red:#e8452f; --red2:#a92415; --amber:#ffb84d; --accent:#ffc94d; --cream:#e8e2d2;
+    --lcd:#8affb1; --lcd-dim:#2b6b45; --lcdbg:#071510;
+    --pad:#26262c; --pad-hi:#34343d;
+    --grid-on:#e8452f; --grid-acc:#ffc94d; --grid-ghost:#585a68;
+    --wood:#5a3b26; --wood2:#3d2718;
+    --font:'Space Grotesk',system-ui,sans-serif;
+    --mono:'JetBrains Mono',Consolas,monospace;
   }
-  *{box-sizing:border-box}
-  #dbl, #dbl *{font-family:var(--font)}
-  #dbl{
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg)}
+  body{
+    font-family:var(--font); color:var(--ink); line-height:1.55; min-height:100vh;
     background:
-      radial-gradient(1200px 600px at 80% -10%, #24242c 0%, transparent 60%),
+      radial-gradient(900px 480px at 85% -8%, rgba(232,69,47,.08) 0%, transparent 55%),
+      radial-gradient(700px 500px at -5% 15%, rgba(255,201,77,.05) 0%, transparent 50%),
       var(--bg);
-    color:var(--ink); min-height:100%; padding:18px; line-height:1.5;
   }
-  #dbl .wrap{max-width:1180px; margin:0 auto}
-  #dbl .topbar{display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-    background:linear-gradient(180deg,#1c1c22,#141418); border:1px solid var(--edge);
-    border-radius:14px; padding:12px 16px; box-shadow:0 8px 30px rgba(0,0,0,.45)}
-  #dbl .brand{display:flex; align-items:baseline; gap:10px}
-  #dbl .brand b{font-size:20px; letter-spacing:.5px}
-  #dbl .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--red);
-    box-shadow:0 0 10px var(--red); display:inline-block; margin-right:2px}
-  #dbl .brand small{color:var(--muted); font-size:11px; letter-spacing:.14em; text-transform:uppercase}
-  #dbl .transport{display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap}
-  #dbl .btn{background:linear-gradient(180deg,#33333c,#22222a); color:var(--ink);
-    border:1px solid #3c3c46; border-radius:9px; padding:9px 14px; font-weight:600; cursor:pointer;
-    font-size:13px; letter-spacing:.02em; transition:.12s; user-select:none}
-  #dbl .btn:hover{border-color:#55555f; transform:translateY(-1px)}
-  #dbl .btn:active{transform:translateY(0)}
-  #dbl .btn.play{background:linear-gradient(180deg,var(--red),var(--red2)); border-color:#7c140d;
-    min-width:88px; box-shadow:0 4px 14px rgba(224,57,43,.35)}
-  #dbl .btn.play.on{background:linear-gradient(180deg,#2fbf71,#1c7d49); border-color:#0d5b31;
-    box-shadow:0 4px 14px rgba(47,191,113,.35)}
-  #dbl .btn.tog{opacity:.55}
-  #dbl .btn.tog.on{opacity:1; border-color:var(--accent); color:#fff;
-    box-shadow:inset 0 0 0 1px var(--accent), 0 0 12px rgba(255,207,92,.25)}
-  #dbl .ctl{display:flex; flex-direction:column; gap:3px; min-width:120px}
-  #dbl .ctl label{font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted)}
-  #dbl .ctl .val{color:var(--accent); font-family:var(--mono)}
-  #dbl input[type=range]{-webkit-appearance:none; appearance:none; height:5px; border-radius:5px;
-    background:#3a3a44; outline:none; width:100%}
-  #dbl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:15px;height:15px;border-radius:50%;
-    background:var(--accent); cursor:pointer; box-shadow:0 0 8px rgba(255,207,92,.5)}
-  #dbl input[type=range]::-moz-range-thumb{width:15px;height:15px;border:none;border-radius:50%;background:var(--accent);cursor:pointer}
-  #dbl .lcd{font-family:var(--mono); background:var(--lcdbg); color:var(--lcd);
-    border:1px solid #14351f; border-radius:8px; padding:7px 12px; font-size:13px; letter-spacing:.08em;
-    box-shadow:inset 0 0 14px rgba(0,0,0,.6); text-shadow:0 0 6px rgba(127,224,168,.6)}
+  ::selection{background:rgba(232,69,47,.4)}
+  .wrap{max-width:1240px; margin:0 auto; padding:26px 20px 40px}
 
-  #dbl .layout{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:18px; margin-top:18px}
-  @media (max-width:900px){ #dbl .layout{grid-template-columns:1fr} }
+  /* ============ Hero strip ============ */
+  .hero{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px}
+  .hero .title{display:flex; align-items:center; gap:14px}
+  .hero .jack{width:44px;height:44px;border-radius:50%;
+    background:radial-gradient(circle at 35% 32%, #4a4d58 0%, #191a20 60%);
+    border:2px solid #3a3d49; position:relative; flex:none}
+  .hero .jack::after{content:''; position:absolute; inset:13px; border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, var(--red) 0%, var(--red2) 75%);
+    box-shadow:0 0 14px rgba(232,69,47,.75)}
+  .hero h1{margin:0; font-size:clamp(24px,4vw,34px); font-weight:700; letter-spacing:.04em; line-height:1.1}
+  .hero h1 span{color:var(--red)}
+  .hero .sub{color:var(--muted); font-size:13px; letter-spacing:.22em; text-transform:uppercase; margin-top:3px; font-weight:500}
+  .hero .byline{text-align:right; font-size:13px; color:var(--muted); line-height:1.6}
+  .hero .byline b{color:var(--accent); font-weight:600}
+  .hero .byline a{color:var(--accent); text-decoration:none}
+  .hero .byline a:hover{text-decoration:underline}
 
-  /* Tabs + lesson */
-  #dbl .tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px}
-  #dbl .tab{background:#191920; border:1px solid var(--edge); color:var(--muted);
-    padding:8px 13px; border-radius:9px 9px 0 0; cursor:pointer; font-size:12.5px; font-weight:600;
-    border-bottom:2px solid transparent}
-  #dbl .tab:hover{color:var(--ink)}
-  #dbl .tab.on{color:#fff; background:var(--panel2); border-bottom-color:var(--red)}
-  #dbl .lesson{background:linear-gradient(180deg,#191920,#141419); border:1px solid var(--edge);
-    border-radius:0 14px 14px 14px; padding:20px 22px; min-height:220px}
-  #dbl .lesson h2{margin:0 0 4px; font-size:22px}
-  #dbl .lesson .kick{color:var(--red); font-size:11px; text-transform:uppercase; letter-spacing:.16em; font-weight:700}
-  #dbl .lesson p{margin:10px 0; color:#d9d6cd; font-size:14.5px}
-  #dbl .lesson .tip{background:rgba(255,207,92,.07); border-left:3px solid var(--accent);
-    padding:10px 14px; border-radius:6px; font-size:13.5px; margin:12px 0}
-  #dbl .lesson .try{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center}
-  #dbl .lesson .ab{display:flex; gap:8px; flex-wrap:wrap}
-  #dbl .chip{font-size:11px; color:var(--muted); font-family:var(--mono)}
+  /* ============ Machine chassis ============ */
+  .machine{
+    border-radius:22px; padding:3px;
+    background:linear-gradient(180deg,#41332a, var(--wood2));
+    box-shadow:0 24px 70px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.04) inset;
+  }
+  .machine-in{
+    border-radius:19px; overflow:hidden;
+    background:linear-gradient(180deg,var(--chassis) 0%, var(--chassis2) 100%);
+    border:1px solid var(--edge);
+  }
 
-  /* Sequencer */
-  #dbl .seq{margin-top:16px; background:linear-gradient(180deg,#16161b,#111116); border:1px solid var(--edge);
-    border-radius:14px; padding:14px}
-  #dbl .seq h3{margin:0 0 10px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
-    display:flex; align-items:center; gap:10px}
-  #dbl .row{display:grid; grid-template-columns:64px 40px repeat(16, 1fr); gap:4px; align-items:center; margin-bottom:5px}
-  #dbl .rname{font-size:11px; font-weight:700; color:#cfccc3; letter-spacing:.02em}
-  #dbl .roff{-webkit-appearance:none;appearance:none; height:4px;border-radius:4px;background:#333; width:36px}
-  #dbl .roff::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--muted);cursor:pointer}
-  #dbl .cell{height:26px; border-radius:5px; background:var(--pad); border:1px solid #303038; cursor:pointer;
-    position:relative; transition:transform .05s}
-  #dbl .cell:hover{border-color:#4a4a54}
-  #dbl .cell.q4{background:#26262d}
-  #dbl .cell.on{background:var(--grid-on); border-color:#ff6a5e}
-  #dbl .cell.acc{background:var(--grid-acc); border-color:#fff0c0}
-  #dbl .cell.ghost{background:var(--grid-ghost); border-color:#7a7a88}
-  #dbl .cell.play{outline:2px solid var(--accent); outline-offset:1px}
-  #dbl .seqfoot{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center}
+  /* ---- Transport bar ---- */
+  .topbar{display:flex; align-items:stretch; gap:14px; flex-wrap:wrap; padding:16px 20px;
+    background:linear-gradient(180deg,#1e2026,#16171c); border-bottom:1px solid var(--edge)}
+  .plate{display:flex; align-items:center; gap:12px; padding-right:16px; border-right:1px solid var(--edge)}
+  .plate .logo{font-weight:700; letter-spacing:.06em; font-size:15px; line-height:1.15}
+  .plate .logo em{font-style:normal; color:var(--red)}
+  .plate .logo small{display:block; font-size:9.5px; color:var(--muted); letter-spacing:.3em; font-weight:500}
+  .btn{font-family:var(--font); background:linear-gradient(180deg,#31333c,#22232a); color:var(--ink);
+    border:1px solid #3d404c; border-radius:10px; padding:10px 15px; font-weight:600; cursor:pointer;
+    font-size:13px; letter-spacing:.02em; transition:all .13s; user-select:none;
+    box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)}
+  .btn:hover{border-color:#565a68; transform:translateY(-1px)}
+  .btn:active{transform:translateY(1px); box-shadow:none}
+  .btn.play{background:linear-gradient(180deg,var(--red),var(--red2)); border-color:#7e150a; min-width:104px;
+    font-size:14px; box-shadow:0 3px 0 #6b1108, 0 6px 18px rgba(232,69,47,.4)}
+  .btn.play.on{background:linear-gradient(180deg,#38cf7f,#1a8a52); border-color:#0c5c33;
+    box-shadow:0 3px 0 #0a4d2b, 0 6px 18px rgba(56,207,127,.4)}
+  .btn.tog{opacity:.5}
+  .btn.tog.on{opacity:1; border-color:var(--accent); color:#fff;
+    box-shadow:inset 0 0 0 1px var(--accent), 0 0 16px rgba(255,201,77,.3)}
+  .lcd{font-family:var(--mono); background:var(--lcdbg); color:var(--lcd);
+    border:1px solid #123822; border-radius:10px; padding:8px 14px; letter-spacing:.05em;
+    box-shadow:inset 0 0 20px rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.05);
+    text-shadow:0 0 7px rgba(138,255,177,.55); display:flex; flex-direction:column; justify-content:center;
+    min-width:190px}
+  .lcd .l1{font-size:15px; font-weight:800}
+  .lcd .l2{font-size:10.5px; color:var(--lcd-dim); text-shadow:none; letter-spacing:.12em}
+  .knobs{display:flex; gap:16px; align-items:stretch; flex-wrap:wrap; margin-left:auto}
+  .ctl{display:flex; flex-direction:column; gap:5px; min-width:118px; justify-content:center}
+  .ctl label{font-size:9.5px; text-transform:uppercase; letter-spacing:.2em; color:var(--muted); font-weight:600;
+    display:flex; justify-content:space-between}
+  .ctl .val{color:var(--accent); font-family:var(--mono); font-weight:600; font-size:11px}
+  input[type=range]{-webkit-appearance:none; appearance:none; height:6px; border-radius:6px;
+    background:linear-gradient(180deg,#101116,#1c1d24); border:1px solid #05060a; outline:none; width:100%; margin:0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:17px;height:17px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ffe1a1, var(--accent) 55%, #b8871f);
+    cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.6), 0 0 10px rgba(255,201,77,.35); border:1px solid #6b4e12}
+  input[type=range]::-moz-range-thumb{width:17px;height:17px;border:1px solid #6b4e12;border-radius:50%;
+    background:var(--accent);cursor:pointer}
+  .togs{display:flex; gap:8px; align-items:center}
 
-  /* MPC pad grid (persistent) */
-  #dbl .mpc{position:sticky; top:14px; align-self:start; background:linear-gradient(180deg,#1b1b21,#0f0f13);
-    border:1px solid #34343d; border-radius:16px; padding:16px; box-shadow:0 12px 40px rgba(0,0,0,.5)}
-  #dbl .mpc .mhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
-  #dbl .mpc .mhead b{font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:#e9e6dd}
-  #dbl .mpc .mhead .lg{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
-  #dbl .pads{display:grid; grid-template-columns:repeat(4,1fr); gap:9px}
-  #dbl .pad{aspect-ratio:1/1; border-radius:9px; cursor:pointer; user-select:none;
-    background:linear-gradient(180deg,var(--pad-hi),var(--pad)); border:1px solid #43434d;
-    display:flex; flex-direction:column; justify-content:space-between; padding:7px; position:relative;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 3px 6px rgba(0,0,0,.4); transition:transform .04s}
-  #dbl .pad .pk{font-family:var(--mono); font-size:10px; color:#7d7d88}
-  #dbl .pad .pl{font-size:10.5px; font-weight:700; color:#d7d4cb; text-align:right; line-height:1.1}
-  #dbl .pad.hit{transform:scale(.94)}
-  #dbl .pad.lit{background:linear-gradient(180deg,#ffd97a,#f2a63a); border-color:#ffe6a8;
-    box-shadow:0 0 18px rgba(255,190,80,.6), inset 0 0 0 1px #fff2cf}
-  #dbl .pad.lit .pk,#dbl .pad.lit .pl{color:#3a2600}
-  #dbl .mpc .mfoot{margin-top:12px; font-size:11px; color:var(--muted); line-height:1.5}
-  #dbl .mpc .mrow{display:flex; gap:8px; margin-top:10px}
-  #dbl .mpc .mrow .btn{flex:1; text-align:center; padding:8px 6px; font-size:11.5px}
+  /* ---- Body layout ---- */
+  .deck{display:grid; grid-template-columns:minmax(0,1fr) 348px; gap:0}
+  @media (max-width:940px){ .deck{grid-template-columns:1fr} }
+  .left{padding:18px 20px 22px; min-width:0}
 
-  #dbl .foot{margin-top:20px; color:var(--muted); font-size:12px; text-align:center; line-height:1.7}
-  #dbl a{color:var(--accent); text-decoration:none} #dbl a:hover{text-decoration:underline}
-  #dbl .hide{display:none !important}
+  /* ---- Tabs ---- */
+  .tabs{display:flex; gap:5px; flex-wrap:wrap; margin-bottom:0}
+  .tab{background:transparent; border:1px solid transparent; color:var(--muted);
+    padding:9px 13px 10px; border-radius:10px 10px 0 0; cursor:pointer; font-size:12.5px; font-weight:600;
+    letter-spacing:.02em; position:relative; transition:color .15s; font-family:var(--font)}
+  .tab .no{font-family:var(--mono); font-size:10px; color:var(--dim); margin-right:6px; font-weight:800}
+  .tab:hover{color:var(--ink)}
+  .tab.on{color:#fff; background:linear-gradient(180deg,#20222a,#1a1b21); border-color:var(--edge); border-bottom-color:transparent}
+  .tab.on .no{color:var(--red)}
+  .tab.on::after{content:''; position:absolute; left:12px; right:12px; top:0; height:2px; background:var(--red);
+    border-radius:0 0 2px 2px; box-shadow:0 0 8px rgba(232,69,47,.6)}
+  .tab.done .no{color:#38cf7f}
+
+  /* ---- Lesson card ---- */
+  .lesson{background:linear-gradient(180deg,#1c1e25,#171820); border:1px solid var(--edge);
+    border-radius:0 14px 14px 14px; padding:24px 26px 22px; min-height:210px; position:relative}
+  .lesson .kick{color:var(--red); font-size:10.5px; text-transform:uppercase; letter-spacing:.28em; font-weight:700}
+  .lesson h2{margin:6px 0 2px; font-size:clamp(20px,2.6vw,26px); font-weight:700; letter-spacing:.01em}
+  .lesson p{margin:12px 0; color:#d5d2c8; font-size:14.5px; max-width:70ch}
+  .lesson b{color:var(--ink)} .lesson i{color:var(--cream)}
+  .lesson .tip{background:linear-gradient(180deg,rgba(255,201,77,.09),rgba(255,201,77,.04));
+    border:1px solid rgba(255,201,77,.25); border-left:3px solid var(--accent);
+    padding:12px 16px; border-radius:8px; font-size:13.5px; margin:14px 0; max-width:75ch}
+  .lesson .tip::before{content:'TRY THIS'; display:block; font-size:9px; letter-spacing:.3em; color:var(--accent);
+    font-weight:700; margin-bottom:4px}
+  .try{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; align-items:center}
+  .try .btn{background:linear-gradient(180deg,#2c2f3a,#20222b)}
+  .try .btn::before{content:'▸ '; color:var(--red)}
+  .lessonNav{display:flex; justify-content:space-between; margin-top:18px; padding-top:14px; border-top:1px solid var(--edge)}
+  .lessonNav .btn{font-size:12px; padding:8px 13px}
+  .chip{font-size:11px; color:var(--muted); font-family:var(--mono)}
+
+  /* ---- Sequencer ---- */
+  .seq{margin-top:16px; background:linear-gradient(180deg,#16181e,#101116); border:1px solid var(--edge);
+    border-radius:14px; padding:16px}
+  .seqhead{display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap}
+  .seqhead h3{margin:0; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--cream); font-weight:700}
+  .legend{display:flex; gap:12px; margin-left:auto; font-size:10px; color:var(--muted); align-items:center; font-family:var(--mono)}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .leds{display:grid; grid-template-columns:104px repeat(16,1fr); gap:4px; margin-bottom:8px; align-items:center}
+  .leds .led{height:6px; border-radius:3px; background:#1c1d24; border:1px solid #101117; transition:background .05s}
+  .leds .led.q{background:#262833}
+  .leds .led.on{background:var(--red); box-shadow:0 0 8px rgba(232,69,47,.9); border-color:#ff7a64}
+  .row{display:grid; grid-template-columns:60px 40px repeat(16,1fr); gap:4px; align-items:center; margin-bottom:5px}
+  .rname{font-size:11px; font-weight:700; color:#cfccc3; letter-spacing:.03em}
+  .roff{-webkit-appearance:none;appearance:none; height:5px;border-radius:4px; width:36px}
+  .roff::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #b9b7ae, #6f6e67); cursor:pointer; border:1px solid #35353b; box-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .cell{height:28px; border-radius:6px; background:linear-gradient(180deg,var(--pad-hi),var(--pad));
+    border:1px solid #31333d; cursor:pointer; position:relative; transition:transform .05s, box-shadow .1s;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+  .cell:hover{border-color:#4d505e; transform:translateY(-1px)}
+  .cell.q4{background:linear-gradient(180deg,#2b2d36,#20222a)}
+  .cell.on{background:linear-gradient(180deg,#ff6a52,var(--grid-on)); border-color:#ff8a74;
+    box-shadow:0 0 10px rgba(232,69,47,.35), inset 0 1px 0 rgba(255,255,255,.25)}
+  .cell.acc{background:linear-gradient(180deg,#ffe093,var(--grid-acc)); border-color:#fff0c4;
+    box-shadow:0 0 12px rgba(255,201,77,.4), inset 0 1px 0 rgba(255,255,255,.4)}
+  .cell.ghost{background:linear-gradient(180deg,#666877,var(--grid-ghost)); border-color:#7d8092}
+  .cell.play{outline:2px solid var(--accent); outline-offset:1px}
+  .seqfoot{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center}
+  .seqfoot .chip{max-width:52ch}
+
+  /* ---- MPC side ---- */
+  .side{background:linear-gradient(180deg,#1d1f26 0%, #14151b 100%); border-left:1px solid var(--edge);
+    padding:18px 18px 20px; display:flex; flex-direction:column; gap:14px}
+  @media (max-width:940px){ .side{border-left:none; border-top:1px solid var(--edge)} }
+  .mhead{display:flex; align-items:center; justify-content:space-between}
+  .mhead b{font-size:12px; letter-spacing:.26em; text-transform:uppercase; color:var(--cream); font-weight:700}
+  .mhead .lg{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 9px var(--red)}
+  .mlcd{font-family:var(--mono); background:var(--lcdbg); color:var(--lcd); border:1px solid #123822;
+    border-radius:8px; padding:7px 11px; font-size:11px; letter-spacing:.08em;
+    box-shadow:inset 0 0 16px rgba(0,0,0,.7); text-shadow:0 0 6px rgba(138,255,177,.5);
+    white-space:nowrap; overflow:hidden}
+  .pads{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+  .pad{aspect-ratio:1/1; border-radius:10px; cursor:pointer; user-select:none;
+    background:linear-gradient(165deg,#3b3d47 0%, var(--pad) 55%, #1e1f26 100%);
+    border:1px solid #454857;
+    display:flex; flex-direction:column; justify-content:space-between; padding:8px; position:relative;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), inset 0 -3px 6px rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.45);
+    transition:transform .05s}
+  .pad .pk{font-family:var(--mono); font-size:10px; color:#8a8c99; font-weight:600}
+  .pad .pl{font-size:10.5px; font-weight:700; color:#dbd8cf; text-align:right; line-height:1.15; letter-spacing:.02em}
+  .pad:hover{border-color:#5b5f70}
+  .pad.hit{transform:scale(.93)}
+  .pad.lit{background:linear-gradient(165deg,#ffe9ad 0%, #ffc94d 45%, #e09a25 100%); border-color:#fff0c4;
+    box-shadow:0 0 22px rgba(255,190,80,.65), inset 0 1px 0 rgba(255,255,255,.6)}
+  .pad.lit .pk,.pad.lit .pl{color:#3d2800}
+  .mrow{display:flex; gap:10px}
+  .mrow .btn{flex:1; text-align:center; padding:9px 6px; font-size:11.5px}
+  .mfoot{font-size:11px; color:var(--muted); line-height:1.6}
+  .mfoot b{color:var(--cream); font-family:var(--mono); font-weight:600; font-size:10.5px}
+  .keysrow{display:flex; gap:4px; flex-wrap:wrap; margin-top:2px}
+  .keycap{font-family:var(--mono); font-size:9.5px; color:#b8b5ac; background:linear-gradient(180deg,#2c2e37,#1e2027);
+    border:1px solid #3c3f4b; border-bottom-width:2px; border-radius:4px; padding:2px 5px}
+
+  /* ---- Footer ---- */
+  .foot{margin-top:22px; color:var(--muted); font-size:12.5px; text-align:center; line-height:1.8}
+  .foot .credit{color:var(--ink); font-size:14px; margin-bottom:4px; letter-spacing:.02em}
+  .foot .credit b{color:var(--accent); font-weight:600}
+  .foot a{color:var(--accent); text-decoration:none}
+  .foot a:hover{text-decoration:underline}
+  .foot .gh{display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:7px 14px;
+    border:1px solid var(--edge2); border-radius:20px; color:var(--cream); font-size:12px}
+  .foot .gh:hover{border-color:var(--accent); text-decoration:none}
 </style>
 
-<div id="dbl">
- <div class="wrap">
-  <div class="topbar">
-    <div class="brand"><span class="dot"></span><b>DILLA BEAT LAB</b><small>feel &gt; grid</small></div>
-    <div class="transport">
-      <button class="btn play" id="playBtn">▶ PLAY</button>
-      <div class="lcd" id="lcd">STEP 01 · 90 BPM</div>
-      <div class="ctl"><label>Tempo <span class="val" id="bpmV">90</span></label>
-        <input type="range" id="bpm" min="60" max="110" value="90"></div>
-      <div class="ctl"><label>Swing <span class="val" id="swingV">54%</span></label>
-        <input type="range" id="swing" min="50" max="72" value="54"></div>
-      <div class="ctl"><label>Humanize <span class="val" id="humV">40</span></label>
-        <input type="range" id="hum" min="0" max="100" value="40"></div>
-      <button class="btn tog on" id="qBtn" title="When OFF, hits fall where you place them (the feel). When ON, everything snaps to the grid.">QUANTIZE: OFF</button>
-      <button class="btn tog" id="dustBtn" title="Vinyl crackle for vibe">DUST</button>
+<div class="wrap">
+  <div class="hero">
+    <div class="title">
+      <div class="jack"></div>
+      <div>
+        <h1>DILLA <span>BEAT</span> LAB</h1>
+        <div class="sub">feel &gt; grid — six lessons in the Yancey bounce</div>
+      </div>
     </div>
+    <div class="byline">Created by <b>@tonyInteractive</b> of <a href="https://park8.io" target="_blank" rel="noopener">@park8.io</a><br>open source · MIT · pure Web Audio</div>
   </div>
 
-  <div class="layout">
-   <!-- LEFT: lessons + sequencer -->
-   <div class="main">
-     <div class="tabs" id="tabs"></div>
-     <div class="lesson" id="lesson"></div>
+  <div class="machine"><div class="machine-in">
+    <div class="topbar">
+      <div class="plate"><div class="logo"><em>DBL</em>-3000<small>BEAT LAB</small></div></div>
+      <button class="btn play" id="playBtn">▶ PLAY</button>
+      <div class="lcd" id="lcd"><div class="l1" id="lcd1">STEP 01 · 90 BPM</div><div class="l2" id="lcd2">READY — HIT PLAY OR BANG A PAD</div></div>
+      <div class="knobs">
+        <div class="ctl"><label>Tempo <span class="val" id="bpmV">90</span></label>
+          <input type="range" id="bpm" min="60" max="110" value="90" step="1"></div>
+        <div class="ctl"><label>Swing <span class="val" id="swingV">54%</span></label>
+          <input type="range" id="swing" min="50" max="72" value="54" step="1"></div>
+        <div class="ctl"><label>Humanize <span class="val" id="humV">40</span></label>
+          <input type="range" id="hum" min="0" max="100" value="40" step="1"></div>
+        <div class="togs">
+          <button class="btn tog on" id="qBtn" title="ON snaps hits to the grid. OFF keeps the human placement — the feel.">QUANTIZE: OFF</button>
+          <button class="btn tog" id="dustBtn" title="Vinyl crackle for vibe">DUST</button>
+        </div>
+      </div>
+    </div>
 
-     <div class="seq">
-       <h3>SHARED SEQUENCER <span class="chip" id="seqNote">— left-click a cell: off → hit → accent → ghost</span></h3>
-       <div id="rows"></div>
-       <div class="seqfoot">
-         <button class="btn" id="clearBtn">Clear</button>
-         <button class="btn tog" id="recBtn" title="Record pad hits into the grid while playing">● REC OFF</button>
-         <span class="chip">Per-row slider = micro-timing (ms early/late). Only heard with QUANTIZE OFF.</span>
-       </div>
-     </div>
-   </div>
+    <div class="deck">
+      <div class="left">
+        <div class="tabs" id="tabs"></div>
+        <div class="lesson" id="lesson"></div>
 
-   <!-- RIGHT: persistent MPC pad grid -->
-   <div class="mpc">
-     <div class="mhead"><b>MPC PADS</b><span class="lg"></span></div>
-     <div class="pads" id="pads"></div>
-     <div class="mrow">
-       <button class="btn" id="bankBtn">BANK A</button>
-       <button class="btn" id="rollBtn" title="Hold last pad as 16th-note roll">ROLL</button>
-     </div>
-     <div class="mfoot">Play with keys <b>1 2 3 4 / Q W E R / A S D F / Z X C V</b>. Pads stay live on every lesson.</div>
-   </div>
-  </div>
+        <div class="seq">
+          <div class="seqhead">
+            <h3>Shared sequencer</h3>
+            <div class="legend">
+              <span><i style="background:var(--grid-on)"></i>hit</span>
+              <span><i style="background:var(--grid-acc)"></i>accent</span>
+              <span><i style="background:var(--grid-ghost)"></i>ghost</span>
+              <span class="chip">click cycles · off→hit→accent→ghost</span>
+            </div>
+          </div>
+          <div class="leds" id="leds"></div>
+          <div id="rows"></div>
+          <div class="seqfoot">
+            <button class="btn" id="clearBtn">Clear</button>
+            <button class="btn tog" id="recBtn" title="Record pad hits into the grid while playing">● REC OFF</button>
+            <span class="chip">Row slider = micro-timing (± ms). Audible with QUANTIZE OFF — that's the drunk.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="mhead"><b>MPC Pads</b><span class="lg"></span></div>
+        <div class="mlcd" id="padLcd">A01 — BANG A PAD</div>
+        <div class="pads" id="pads"></div>
+        <div class="mrow">
+          <button class="btn" id="bankBtn">BANK A</button>
+          <button class="btn tog" id="rollBtn" title="While ON, held pads repeat as 16th-note rolls at the current swing">ROLL</button>
+        </div>
+        <div class="mfoot">
+          Pads stay live on every lesson. Play them with:
+          <div class="keysrow">
+            <span class="keycap">1</span><span class="keycap">2</span><span class="keycap">3</span><span class="keycap">4</span>
+            <span class="keycap">Q</span><span class="keycap">W</span><span class="keycap">E</span><span class="keycap">R</span>
+            <span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span><span class="keycap">F</span>
+            <span class="keycap">Z</span><span class="keycap">X</span><span class="keycap">C</span><span class="keycap">V</span>
+          </div>
+          <div style="margin-top:6px"><b>SPACE</b> = play/stop</div>
+        </div>
+      </div>
+    </div>
+  </div></div>
 
   <div class="foot">
-    Open source · MIT · built to learn the late <b>J Dilla</b>'s drum feel — no samples, all synthesized in your browser.<br>
-    Turn <b>Quantize OFF</b>, nudge the snare late, loosen the hats: that's the whole secret.
+    <div class="credit">Created by <b>@tonyInteractive</b> of <a href="https://park8.io" target="_blank" rel="noopener">@park8.io</a></div>
+    Built to learn the late <b>J Dilla</b>'s drum feel — no samples, every drum synthesized in your browser.<br>
+    Turn <b>Quantize OFF</b>, drag the snare late, loosen the hats: that's the whole secret.<br>
+    <a class="gh" href="https://github.com/tlim-lang/dilla-beat-lab" target="_blank" rel="noopener">★ Star / fork on GitHub</a>
   </div>
- </div>
 </div>
 
 <script>
 (function(){
   "use strict";
-  var root = document.getElementById('dbl');
 
   /* ---------- Audio engine ---------- */
   var AC = window.AudioContext || window.webkitAudioContext;
@@ -202,19 +324,18 @@
     if(ctx.state==='suspended') ctx.resume();
   }
   function nz(){ var s=ctx.createBufferSource(); s.buffer=noiseBuf; s.loop=true; return s; }
-  function env(g, t, a, dur, peak){
+  function env(g,t,a,dur,peak){
     g.gain.cancelScheduledValues(t);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak), t+a);
-    g.gain.exponentialRampToValueAtTime(0.0001, t+a+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t+a);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+a+dur);
   }
-  // voices
   function vKick(t,v,sub){
     var o=ctx.createOscillator(), g=ctx.createGain();
     o.type='sine';
-    var f0 = sub?120:170, f1 = sub?38:48;
+    var f0=sub?120:170, f1=sub?38:48;
     o.frequency.setValueAtTime(f0,t);
-    o.frequency.exponentialRampToValueAtTime(f1, t+ (sub?0.12:0.09));
+    o.frequency.exponentialRampToValueAtTime(f1,t+(sub?0.12:0.09));
     env(g,t,0.004,(sub?0.5:0.34),0.95*v);
     o.connect(g); g.connect(master); o.start(t); o.stop(t+0.6);
   }
@@ -257,9 +378,9 @@
   function vMetal(t,v,freq,dur){
     var g=ctx.createGain(), f=ctx.createBiquadFilter();
     f.type='bandpass'; f.frequency.value=freq*3; f.Q.value=2.5;
-    var ratios=[1,1.51,1.98,2.44];
-    for(var i=0;i<ratios.length;i++){
-      var o=ctx.createOscillator(); o.type='square'; o.frequency.value=freq*ratios[i]; o.connect(f); o.start(t); o.stop(t+dur);
+    var r=[1,1.51,1.98,2.44];
+    for(var i=0;i<r.length;i++){
+      var o=ctx.createOscillator(); o.type='square'; o.frequency.value=freq*r[i]; o.connect(f); o.start(t); o.stop(t+dur);
     }
     env(g,t,0.002,dur,0.28*v); f.connect(g); g.connect(master);
   }
@@ -293,38 +414,32 @@
     if(on && !dust){
       dust=nz(); dustGain=ctx.createGain(); dustGain.gain.value=0.0;
       var f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=2000;
-      // crackle via random amplitude
       dust.connect(f); f.connect(dustGain); dustGain.connect(master); dust.start();
-      dustGain.gain.setTargetAtTime(0.06, ctx.currentTime, 0.5);
-    } else if(dust){
-      dustGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2);
     }
-    if(on && dust) dustGain.gain.setTargetAtTime(0.05, ctx.currentTime, 0.3);
+    if(dust) dustGain.gain.setTargetAtTime(on?0.05:0.0001, ctx.currentTime, 0.3);
   }
 
   /* ---------- State ---------- */
-  var STEPS=16;
-  // velocities: 0 off, ghost .28, hit .7, accent 1.0
   var V={off:0, ghost:.28, hit:.7, acc:1};
   var tracks=[
-    {name:'Kick',   voice:'kick',  off:0,  steps:new Array(16).fill(0)},
-    {name:'Snare',  voice:'snare', off:0,  steps:new Array(16).fill(0)},
-    {name:'C-Hat',  voice:'chat',  off:0,  steps:new Array(16).fill(0)},
-    {name:'O-Hat',  voice:'ohat',  off:0,  steps:new Array(16).fill(0)},
-    {name:'Clap',   voice:'clap',  off:0,  steps:new Array(16).fill(0)},
-    {name:'Perc',   voice:'perc',  off:0,  steps:new Array(16).fill(0)}
+    {name:'Kick',  voice:'kick',  off:0, steps:new Array(16).fill(0)},
+    {name:'Snare', voice:'snare', off:0, steps:new Array(16).fill(0)},
+    {name:'C-Hat', voice:'chat',  off:0, steps:new Array(16).fill(0)},
+    {name:'O-Hat', voice:'ohat',  off:0, steps:new Array(16).fill(0)},
+    {name:'Clap',  voice:'clap',  off:0, steps:new Array(16).fill(0)},
+    {name:'Perc',  voice:'perc',  off:0, steps:new Array(16).fill(0)}
   ];
-  var bpm=90, swing=54, humanize=40, quantize=false, dustOn=false, recOn=false;
+  var bpm=90, swing=54, humanize=40, quantize=false, dustOn=false, recOn=false, rollOn=false;
   var isPlaying=false, cur16=0, nextTime=0, timer=null;
   var lookahead=25, ahead=0.12;
-
   function sec16(){ return (60/bpm)/4; }
-  function swingSec(){ return ((swing-50)/50) * sec16(); } // applied to odd 16ths
+  function swingSec(){ return ((swing-50)/50)*sec16(); }
   function humMs(){ return (humanize/100)*22; }
   function velVar(){ return (humanize/100)*0.32; }
 
   /* ---------- Scheduler ---------- */
-  function scheduleStep(step, time){
+  var drawQ=[];
+  function scheduleStep(step,time){
     for(var i=0;i<tracks.length;i++){
       var tr=tracks[i], vel=tr.steps[step];
       if(vel>0){
@@ -332,62 +447,66 @@
         if(!quantize){
           t += tr.off/1000;
           t += (Math.random()*2-1)*humMs()/1000;
-          v *= 1 + (Math.random()*2-1)*velVar();
+          v *= 1+(Math.random()*2-1)*velVar();
         }
         if(t<ctx.currentTime) t=ctx.currentTime;
         v=Math.max(0.05,Math.min(1.1,v));
-        trigger(tr.voice, t, v);
+        trigger(tr.voice,t,v);
       }
     }
-    drawQ.push({step:step, time:time});
-  }
-  function advance(){ nextTime += sec16(); cur16=(cur16+1)%16; }
-  function scheduler(){
-    while(nextTime < ctx.currentTime + ahead){
-      var t=nextTime;
-      if(cur16%2===1) t += swingSec();
-      scheduleStep(cur16, t);
-      advance();
+    if(rollOn && heldPad>=0){
+      trigger(padDefs[heldPad].v, time, 0.8);
     }
-    timer=setTimeout(scheduler, lookahead);
+    drawQ.push({step:step,time:time});
   }
-  var drawQ=[];
+  function scheduler(){
+    while(nextTime < ctx.currentTime+ahead){
+      var t=nextTime;
+      if(cur16%2===1) t+=swingSec();
+      scheduleStep(cur16,t);
+      nextTime += sec16(); cur16=(cur16+1)%16;
+    }
+    timer=setTimeout(scheduler,lookahead);
+  }
   function drawLoop(){
-    var ct = ctx?ctx.currentTime:0, s=-1;
-    while(drawQ.length && drawQ[0].time < ct){ s=drawQ[0].step; drawQ.shift(); }
+    var ct=ctx?ctx.currentTime:0, s=-1;
+    while(drawQ.length && drawQ[0].time<ct){ s=drawQ[0].step; drawQ.shift(); }
     if(s>=0) paintPlayhead(s);
     requestAnimationFrame(drawLoop);
   }
   function play(){
     ensure(); isPlaying=true; cur16=0; nextTime=ctx.currentTime+0.06;
     scheduler();
-    var b=root.querySelector('#playBtn'); b.classList.add('on'); b.textContent='■ STOP';
+    var b=document.getElementById('playBtn'); b.classList.add('on'); b.textContent='■ STOP';
+    lcd2('QUANTIZE '+(quantize?'ON':'OFF')+' · SWING '+swing+'% · HUM '+humanize);
   }
   function stop(){
     isPlaying=false; if(timer) clearTimeout(timer); timer=null; drawQ=[];
-    var b=root.querySelector('#playBtn'); b.classList.remove('on'); b.textContent='▶ PLAY';
-    clearPlayhead();
+    var b=document.getElementById('playBtn'); b.classList.remove('on'); b.textContent='▶ PLAY';
+    clearPlayhead(); clearLeds();
+    lcd1('STEP 01 · '+bpm+' BPM'); lcd2('STOPPED — READY');
   }
 
   /* ---------- Pads ---------- */
   var padDefs=[
-    {v:'kick', l:'Kick', k:'1'},{v:'snare', l:'Snare', k:'2'},{v:'rim', l:'Rim', k:'3'},{v:'clap', l:'Clap', k:'4'},
-    {v:'chat', l:'C-Hat', k:'Q'},{v:'ohat', l:'O-Hat', k:'W'},{v:'lotom', l:'Lo Tom', k:'E'},{v:'hitom', l:'Hi Tom', k:'R'},
-    {v:'cow', l:'Cowbell', k:'A'},{v:'conga', l:'Conga', k:'S'},{v:'shaker', l:'Shaker', k:'D'},{v:'ride', l:'Ride', k:'F'},
-    {v:'perc', l:'Perc', k:'Z'},{v:'zap', l:'Zap', k:'X'},{v:'snareg', l:'Ghost Sn', k:'C'},{v:'subkick', l:'Sub Kick', k:'V'}
+    {v:'kick',l:'Kick',k:'1'},{v:'snare',l:'Snare',k:'2'},{v:'rim',l:'Rim',k:'3'},{v:'clap',l:'Clap',k:'4'},
+    {v:'chat',l:'C-Hat',k:'Q'},{v:'ohat',l:'O-Hat',k:'W'},{v:'lotom',l:'Lo Tom',k:'E'},{v:'hitom',l:'Hi Tom',k:'R'},
+    {v:'cow',l:'Cowbell',k:'A'},{v:'conga',l:'Conga',k:'S'},{v:'shaker',l:'Shaker',k:'D'},{v:'ride',l:'Ride',k:'F'},
+    {v:'perc',l:'Perc',k:'Z'},{v:'zap',l:'Zap',k:'X'},{v:'snareg',l:'Ghost Sn',k:'C'},{v:'subkick',l:'Sub Kick',k:'V'}
   ];
-  var keyToPad={};
+  var keyToPad={}, heldPad=-1;
   padDefs.forEach(function(p,i){ keyToPad[p.k.toLowerCase()]=i; });
-  // map pad voice -> sequencer track index (for REC)
   function voiceToTrack(voice){ for(var i=0;i<tracks.length;i++) if(tracks[i].voice===voice) return i; return -1; }
-
-  function hitPad(i, vel){
+  function padCode(i){ return 'A'+((i+1)<10?'0'+(i+1):(i+1)); }
+  function hitPad(i,vel){
     ensure();
     var p=padDefs[i]; if(!p) return;
     trigger(p.v, ctx.currentTime+0.001, vel||0.95);
-    var el=root.querySelectorAll('.pad')[i];
-    if(el){ el.classList.add('hit','lit'); setTimeout(function(){ el.classList.remove('hit'); },90);
-      setTimeout(function(){ el.classList.remove('lit'); },140); }
+    heldPad=i;
+    document.getElementById('padLcd').textContent=padCode(i)+' — '+p.l.toUpperCase()+(rollOn?' · ROLL':'');
+    var el=document.querySelectorAll('.pad')[i];
+    if(el){ el.classList.add('hit','lit'); setTimeout(function(){el.classList.remove('hit');},90);
+      setTimeout(function(){el.classList.remove('lit');},150); }
     if(recOn && isPlaying){
       var ti=voiceToTrack(p.v);
       if(ti>=0){ tracks[ti].steps[cur16]=V.hit; paintCell(ti,cur16); }
@@ -396,30 +515,41 @@
 
   /* ---------- Render ---------- */
   function buildPads(){
-    var host=root.querySelector('#pads'); host.innerHTML='';
+    var host=document.getElementById('pads'); host.innerHTML='';
     padDefs.forEach(function(p,i){
-      var d=document.createElement('div'); d.className='pad'; d.setAttribute('data-i',i);
+      var d=document.createElement('div'); d.className='pad';
       d.innerHTML='<div class="pk">'+p.k+'</div><div class="pl">'+p.l+'</div>';
-      d.addEventListener('mousedown', function(e){ e.preventDefault(); hitPad(i); });
-      d.addEventListener('touchstart', function(e){ e.preventDefault(); hitPad(i); }, {passive:false});
+      d.addEventListener('mousedown',function(e){e.preventDefault();hitPad(i);});
+      d.addEventListener('mouseup',function(){heldPad=-1;});
+      d.addEventListener('mouseleave',function(){if(heldPad===i)heldPad=-1;});
+      d.addEventListener('touchstart',function(e){e.preventDefault();hitPad(i);},{passive:false});
+      d.addEventListener('touchend',function(){heldPad=-1;});
       host.appendChild(d);
     });
   }
-  function classFor(v){ if(v>=1) return 'acc'; if(v>=0.6) return 'on'; if(v>0) return 'ghost'; return ''; }
+  function buildLeds(){
+    var host=document.getElementById('leds'); host.innerHTML='<div></div>';
+    for(var s=0;s<16;s++){
+      var l=document.createElement('div'); l.className='led'+((s%4===0)?' q':''); host.appendChild(l);
+    }
+  }
+  function classFor(v){ if(v>=1)return 'acc'; if(v>=0.6)return 'on'; if(v>0)return 'ghost'; return ''; }
   function buildRows(){
-    var host=root.querySelector('#rows'); host.innerHTML='';
+    var host=document.getElementById('rows'); host.innerHTML='';
     tracks.forEach(function(tr,ti){
       var row=document.createElement('div'); row.className='row';
       var nm=document.createElement('div'); nm.className='rname'; nm.textContent=tr.name; row.appendChild(nm);
-      var off=document.createElement('input'); off.type='range'; off.className='roff'; off.min=-40; off.max=40; off.value=tr.off;
-      off.title='Micro-timing '+tr.name+' (ms)';
-      off.addEventListener('input', function(){ tr.off=+off.value; });
+      var off=document.createElement('input'); off.type='range'; off.className='roff';
+      off.min=-40; off.max=40; off.step=1; off.value=tr.off;
+      off.title='Micro-timing '+tr.name+' ('+tr.off+' ms)';
+      off.addEventListener('input',function(){ tr.off=+off.value; off.title='Micro-timing '+tr.name+' ('+tr.off+' ms)';
+        lcd2(tr.name.toUpperCase()+' NUDGE '+(tr.off>0?'+':'')+tr.off+' MS'); });
       row.appendChild(off);
       for(var s=0;s<16;s++){
         (function(s){
           var c=document.createElement('div'); c.className='cell'+((Math.floor(s/4)%2)?' q4':'');
           c.setAttribute('data-t',ti); c.setAttribute('data-s',s);
-          c.addEventListener('click', function(){
+          c.addEventListener('click',function(){
             var v=tr.steps[s];
             var next = v===0?V.hit : (v===V.hit?V.acc : (v===V.acc?V.ghost:0));
             tr.steps[s]=next; paintCell(ti,s);
@@ -432,7 +562,7 @@
     });
     paintAll();
   }
-  function cellEl(ti,s){ return root.querySelector('.cell[data-t="'+ti+'"][data-s="'+s+'"]'); }
+  function cellEl(ti,s){ return document.querySelector('.cell[data-t="'+ti+'"][data-s="'+s+'"]'); }
   function paintCell(ti,s){
     var c=cellEl(ti,s); if(!c) return;
     c.classList.remove('on','acc','ghost');
@@ -441,136 +571,168 @@
   function paintAll(){ tracks.forEach(function(tr,ti){ for(var s=0;s<16;s++) paintCell(ti,s); }); }
   function paintPlayhead(step){
     clearPlayhead();
-    for(var ti=0;ti<tracks.length;ti++){ var c=cellEl(ti,step); if(c) c.classList.add('play'); }
-    var n=(step+1); root.querySelector('#lcd').textContent='STEP '+(n<10?'0'+n:n)+' · '+bpm+' BPM';
+    for(var ti=0;ti<tracks.length;ti++){ var c=cellEl(ti,step); if(c)c.classList.add('play'); }
+    var leds=document.querySelectorAll('#leds .led');
+    for(var i=0;i<leds.length;i++) leds[i].classList.toggle('on', i===step);
+    var n=step+1;
+    lcd1('STEP '+(n<10?'0'+n:n)+' · '+bpm+' BPM');
   }
-  function clearPlayhead(){ var a=root.querySelectorAll('.cell.play'); for(var i=0;i<a.length;i++) a[i].classList.remove('play'); }
+  function clearPlayhead(){ var a=document.querySelectorAll('.cell.play'); for(var i=0;i<a.length;i++)a[i].classList.remove('play'); }
+  function clearLeds(){ var a=document.querySelectorAll('#leds .led.on'); for(var i=0;i<a.length;i++)a[i].classList.remove('on'); }
+  function lcd1(s){ document.getElementById('lcd1').textContent=s; }
+  function lcd2(s){ document.getElementById('lcd2').textContent=s; }
 
   /* ---------- Lessons ---------- */
-  function P(str){ // pattern helper: "x" hit, "X" accent, "." off, "o" ghost
+  function P(str){
     return str.replace(/\s/g,'').split('').map(function(ch){
       return ch==='X'?V.acc:ch==='x'?V.hit:ch==='o'?V.ghost:0;
     }).slice(0,16);
   }
   var presets={
-    straight:{ bpm:90, swing:50, hum:0, quant:true, offs:[0,0,0,0,0,0], pat:{
-      Kick:'x...x...x...x...', Snare:'....X.......X...', 'C-Hat':'x.x.x.x.x.x.x.x.', 'O-Hat':'................', Clap:'................', Perc:'................'}},
-    feel:{ bpm:90, swing:56, hum:45, quant:false, offs:[4,20,-8,6,18,0], pat:{
-      Kick:'x..xx...x..x.x..', Snare:'....X.......X..o', 'C-Hat':'xoxxx.xoxxx.xox.', 'O-Hat':'......x.......x.', Clap:'................', Perc:'..o.......o.....'}},
-    drunk:{ bpm:88, swing:52, hum:30, quant:false, offs:[6,28,-12,8,24,0], pat:{
-      Kick:'x...x..xx...x...', Snare:'....X.......X...', 'C-Hat':'x.x.x.x.x.x.x.x.', 'O-Hat':'................', Clap:'................', Perc:'................'}},
-    hats:{ bpm:92, swing:58, hum:55, quant:false, offs:[0,16,-10,4,0,0], pat:{
-      Kick:'x.....x.x.......', Snare:'....X.......X...', 'C-Hat':'xoxoxoxxoxoxxoxo', 'O-Hat':'....x.......x...', Clap:'................', Perc:'................'}},
-    ghost:{ bpm:90, swing:55, hum:35, quant:false, offs:[2,22,-6,6,0,0], pat:{
-      Kick:'x..o.x..x..o.x..', Snare:'o..oX..o.o.oX..o', 'C-Hat':'x.x.x.x.x.x.x.x.', 'O-Hat':'................', Clap:'................', Perc:'................'}},
-    mpc:{ bpm:93, swing:64, hum:0, quant:true, offs:[0,0,0,0,0,0], pat:{
-      Kick:'x...x...x...x...', Snare:'....X.......X...', 'C-Hat':'x.x.x.x.x.x.x.x.', 'O-Hat':'................', Clap:'................', Perc:'................'}},
-    dilla:{ bpm:93, swing:53, hum:50, quant:false, offs:[3,26,-11,7,0,14], pat:{
-      Kick:'x...x..xx...x...', Snare:'....X...o...X..o', 'C-Hat':'xoxxx.xoxxx.xoxx', 'O-Hat':'......x.......x.', Clap:'................', Perc:'..o.......o.....'}},
-    build:{ bpm:90, swing:56, hum:40, quant:false, offs:[2,20,-8,6,0,0], pat:{
-      Kick:'x.......x.......', Snare:'....X.......X...', 'C-Hat':'x.x.x.x.x.x.x.x.', 'O-Hat':'................', Clap:'................', Perc:'................'}}
+    straight:{bpm:90,swing:50,hum:0,quant:true,offs:[0,0,0,0,0,0],pat:{
+      Kick:'x...x...x...x...',Snare:'....X.......X...','C-Hat':'x.x.x.x.x.x.x.x.','O-Hat':'................',Clap:'................',Perc:'................'}},
+    feel:{bpm:90,swing:56,hum:45,quant:false,offs:[4,20,-8,6,18,0],pat:{
+      Kick:'x..xx...x..x.x..',Snare:'....X.......X..o','C-Hat':'xoxxx.xoxxx.xox.','O-Hat':'......x.......x.',Clap:'................',Perc:'..o.......o.....'}},
+    drunk:{bpm:88,swing:52,hum:30,quant:false,offs:[6,28,-12,8,24,0],pat:{
+      Kick:'x...x..xx...x...',Snare:'....X.......X...','C-Hat':'x.x.x.x.x.x.x.x.','O-Hat':'................',Clap:'................',Perc:'................'}},
+    hats:{bpm:92,swing:58,hum:55,quant:false,offs:[0,16,-10,4,0,0],pat:{
+      Kick:'x.....x.x.......',Snare:'....X.......X...','C-Hat':'xoxoxoxxoxoxxoxo','O-Hat':'....x.......x...',Clap:'................',Perc:'................'}},
+    ghost:{bpm:90,swing:55,hum:35,quant:false,offs:[2,22,-6,6,0,0],pat:{
+      Kick:'x..o.x..x..o.x..',Snare:'o..oX..o.o.oX..o','C-Hat':'x.x.x.x.x.x.x.x.','O-Hat':'................',Clap:'................',Perc:'................'}},
+    mpc:{bpm:93,swing:64,hum:0,quant:true,offs:[0,0,0,0,0,0],pat:{
+      Kick:'x...x...x...x...',Snare:'....X.......X...','C-Hat':'x.x.x.x.x.x.x.x.','O-Hat':'................',Clap:'................',Perc:'................'}},
+    dilla:{bpm:93,swing:53,hum:50,quant:false,offs:[3,26,-11,7,0,14],pat:{
+      Kick:'x...x..xx...x...',Snare:'....X...o...X..o','C-Hat':'xoxxx.xoxxx.xoxx','O-Hat':'......x.......x.',Clap:'................',Perc:'..o.......o.....'}},
+    build:{bpm:90,swing:56,hum:40,quant:false,offs:[2,20,-8,6,0,0],pat:{
+      Kick:'x.......x.......',Snare:'....X.......X...','C-Hat':'x.x.x.x.x.x.x.x.','O-Hat':'................',Clap:'................',Perc:'................'}}
   };
-  function loadPreset(name){
+  function applyPreset(name){
     var p=presets[name]; if(!p) return;
     bpm=p.bpm; swing=p.swing; humanize=p.hum; quantize=p.quant;
-    tracks.forEach(function(tr,i){ tr.off=p.offs[i]||0; tr.steps = p.pat[tr.name]?P(p.pat[tr.name]):new Array(16).fill(0); });
+    tracks.forEach(function(tr,i){ tr.off=p.offs[i]||0; tr.steps=p.pat[tr.name]?P(p.pat[tr.name]):new Array(16).fill(0); });
     syncControls(); buildRows();
+  }
+  function loadPreset(name){
+    applyPreset(name);
+    lcd2('LOADED: '+name.toUpperCase());
     if(!isPlaying) play();
   }
   function syncControls(){
-    root.querySelector('#bpm').value=bpm; root.querySelector('#bpmV').textContent=bpm;
-    root.querySelector('#swing').value=swing; root.querySelector('#swingV').textContent=swing+'%';
-    root.querySelector('#hum').value=humanize; root.querySelector('#humV').textContent=humanize;
+    document.getElementById('bpm').value=bpm; document.getElementById('bpmV').textContent=bpm;
+    document.getElementById('swing').value=swing; document.getElementById('swingV').textContent=swing+'%';
+    document.getElementById('hum').value=humanize; document.getElementById('humV').textContent=humanize;
     setQ(quantize);
   }
-  function setQ(on){ quantize=on; var b=root.querySelector('#qBtn');
-    b.textContent='QUANTIZE: '+(on?'ON':'OFF'); b.classList.toggle('on', on); }
+  function setQ(on){ quantize=on; var b=document.getElementById('qBtn');
+    b.textContent='QUANTIZE: '+(on?'ON':'OFF'); b.classList.toggle('on',on); }
 
   var lessons=[
-    {id:'grid', tab:'1 · Grid vs Feel', title:'The Grid vs The Feel', kicker:'Lesson 01',
+    {tab:'Grid vs Feel', title:'The Grid vs The Feel', kicker:'Lesson 01',
       body:'<p>Every drum machine wants to fix your timing. Hit a pad a little late and it yanks the note back onto the nearest grid line. That’s <b>quantize</b>, and it makes drums sound tight, even — and a little robotic.</p>'+
            '<p>James Yancey — <b>J Dilla</b> — famously turned quantize <b>off</b> on his Akai MPC3000 and played the drums in by hand, keeping the imperfections. The kick, snare and hats each land a hair early or late, and that <i>tension between the hits</i> is the groove.</p>'+
-           '<div class="tip">Hit <b>Load</b>, then toggle <b>QUANTIZE</b> in the top bar. On = machine-tight. Off = the same pattern breathes. Nothing else changes but the feel.</div>',
-      actions:[['Load straight beat','straight'],['Load the same beat, Dilla feel','feel']]},
-    {id:'drunk', tab:'2 · Drunk Drums', title:'Drunk Drums (micro-timing)', kicker:'Lesson 02',
-      body:'<p>People call Dilla’s drums “drunk” because they lean. The trick is <b>micro-timing</b>: nudging a single instrument a few milliseconds off the grid and leaving it there.</p>'+
-           '<p>Classic move — drag the <b>snare</b> late so it lands behind the beat (lazy, behind-the-pocket), while the <b>hats</b> push slightly early. Use the little slider on the left of each sequencer row to shove that instrument early (–) or late (+). It’s only audible with <b>Quantize OFF</b>.</p>'+
-           '<div class="tip">Load, then drag the <b>Snare</b> row slider toward +25ms and the <b>C-Hat</b> slider toward –10ms. Feel it start to stumble in the best way.</div>',
+           '<div class="tip">Load a beat, then toggle <b>QUANTIZE</b> in the top bar while it plays. On = machine-tight. Off = the same notes breathe. Nothing else changes but the feel.</div>',
+      actions:[['Load straight beat','straight'],['Same beat, Dilla feel','feel']]},
+    {tab:'Drunk Drums', title:'Drunk Drums (micro-timing)', kicker:'Lesson 02',
+      body:'<p>People call Dilla’s drums “drunk” because they lean. The trick is <b>micro-timing</b>: nudging one instrument a few milliseconds off the grid and leaving it there.</p>'+
+           '<p>Classic move — drag the <b>snare</b> late so it lands behind the beat (lazy, behind-the-pocket) while the <b>hats</b> push slightly early. Use the small slider at the left of each sequencer row to shove that instrument early (−) or late (+). It’s only audible with <b>Quantize OFF</b>.</p>'+
+           '<div class="tip">Load the starter, then drag the <b>Snare</b> row slider toward +25 ms and <b>C-Hat</b> toward −10 ms. Feel it start to stumble — in the best way.</div>',
       actions:[['Load drunk starter','drunk']]},
-    {id:'hats', tab:'3 · Loose Hi-Hats', title:'Loose Hi-Hats', kicker:'Lesson 03',
+    {tab:'Loose Hi-Hats', title:'Loose Hi-Hats', kicker:'Lesson 03',
       body:'<p>Dilla’s hi-hats are never a metronome. They’re a spray of 16th notes with uneven spacing and wildly varied volume — some barely there, some snapping.</p>'+
-           '<p>Two ingredients: <b>swing</b> (delays every other 16th, top bar) and <b>humanize</b> (random timing + velocity jitter). Push both up and the hats stop marching and start rolling.</p>'+
-           '<div class="tip">Load, then raise <b>Humanize</b> to ~60 and <b>Swing</b> to ~60%. Notice ghost hats (dim cells) — those low-velocity taps are half the vibe.</div>',
+           '<p>Two ingredients: <b>Swing</b> (delays every other 16th — top bar) and <b>Humanize</b> (random timing + velocity jitter). Push both up and the hats stop marching and start rolling.</p>'+
+           '<div class="tip">Load the groove, then raise <b>Humanize</b> to ~60 and <b>Swing</b> to ~60%. Notice the dim cells — ghost hats. Those low-velocity taps are half the vibe.</div>',
       actions:[['Load loose-hat groove','hats']]},
-    {id:'ghost', tab:'4 · Ghost Notes', title:'Ghost Notes & Velocity', kicker:'Lesson 04',
+    {tab:'Ghost Notes', title:'Ghost Notes & Velocity', kicker:'Lesson 04',
       body:'<p>A ghost note is a hit played so soft it’s felt more than heard. Dilla packed the space between the backbeat with ghost snares and kicks, giving the loop a human, conversational bounce.</p>'+
            '<p>In the grid, click a cell repeatedly to cycle <b>off → hit → accent → ghost</b>. Ghost cells are dim. With <b>Humanize</b> up, every hit’s volume also wobbles, so no two bars are identical.</p>'+
-           '<div class="tip">Load and listen for the quiet snares around the loud ones. Try turning a few normal hits into ghosts (click twice more) and hear it soften.</div>',
+           '<div class="tip">Load the groove and listen for the quiet snares around the loud ones. Turn a few normal hits into ghosts (click twice more) and hear the pocket soften.</div>',
       actions:[['Load ghost-note groove','ghost']]},
-    {id:'swing', tab:'5 · Dilla vs MPC Swing', title:'Dilla Swing vs MPC Swing', kicker:'Lesson 05',
+    {tab:'Dilla vs MPC Swing', title:'Dilla Swing vs MPC Swing', kicker:'Lesson 05',
       body:'<p>The MPC has a <b>swing %</b> knob that delays every other 16th by the <i>same</i> amount, everywhere. It’s even, mathematical swing.</p>'+
-           '<p>Dilla’s swing is <b>uneven</b> — he swung by hand, so different hits lean by different amounts, and the feel drifts across the bar. That lopsidedness is why a quantized 62% swing never quite sounds like him.</p>'+
-           '<div class="tip">A/B these two. Same tempo, same notes — one is uniform MPC swing, the other is hand-placed offsets with Quantize off. Your ear will pick the human one.</div>',
+           '<p>Dilla’s swing is <b>uneven</b> — he swung by hand, so different hits lean by different amounts and the feel drifts across the bar. That lopsidedness is why a quantized 62% swing never quite sounds like him.</p>'+
+           '<div class="tip">A/B the two below. Same tempo, same notes — one is uniform machine swing, the other is hand-placed offsets with Quantize off. Your ear will pick the human one.</div>',
       actions:[['A — MPC 64% swing','mpc'],['B — Dilla hand-feel','dilla']]},
-    {id:'build', tab:'6 · Build-a-Beat', title:'Build Your Own', kicker:'Lesson 06',
-      body:'<p>Now you drive. Program the grid, bang the pads, and shape the feel. Everything you learned lives in the top bar and the row sliders.</p>'+
-           '<p>Turn on <b>REC</b>, hit <b>PLAY</b>, and finger-drum the pads — your hits get written into the grid at the current step. Then flip <b>Quantize OFF</b>, nudge a couple of rows, and push Humanize until it feels alive.</p>'+
-           '<div class="tip">Recipe: kick + backbeat snare, spray the C-Hat row, drag the snare +20ms, humanize ~40, swing ~55%. Congratulations — that’s the Dilla starter kit.</div>',
+    {tab:'Build-a-Beat', title:'Build Your Own', kicker:'Lesson 06',
+      body:'<p>Now you drive. Program the grid, bang the pads, shape the feel. Everything you learned lives in the top bar and the row sliders.</p>'+
+           '<p>Turn on <b>REC</b>, hit <b>PLAY</b>, and finger-drum the pads — your hits get written into the grid at the current step. Then flip <b>Quantize OFF</b>, nudge a couple of rows, and push Humanize until it feels alive. Try <b>ROLL</b> while holding a pad for 16th-note fills.</p>'+
+           '<div class="tip">Recipe: kick + backbeat snare, spray the C-Hat row, drag the snare +20 ms, Humanize ~40, Swing ~55%. Congratulations — that’s the Dilla starter kit.</div>',
       actions:[['Load empty-ish starter','build'],['Load full Dilla groove','dilla']]}
   ];
-  var activeLesson=0;
+  var activeLesson=0, visited={};
   function buildTabs(){
-    var host=root.querySelector('#tabs'); host.innerHTML='';
+    var host=document.getElementById('tabs'); host.innerHTML='';
     lessons.forEach(function(L,i){
-      var b=document.createElement('div'); b.className='tab'+(i===0?' on':''); b.textContent=L.tab;
-      b.addEventListener('click', function(){ showLesson(i); });
+      var b=document.createElement('button'); b.type='button';
+      b.className='tab'+(i===0?' on':'');
+      b.innerHTML='<span class="no">'+(i+1<10?'0':'')+(i+1)+'</span>'+L.tab;
+      b.addEventListener('click',function(){ showLesson(i); });
       host.appendChild(b);
     });
   }
   function showLesson(i){
-    activeLesson=i;
-    var tabs=root.querySelectorAll('.tab'); for(var k=0;k<tabs.length;k++) tabs[k].classList.toggle('on', k===i);
-    var L=lessons[i], html='<div class="kick">'+L.kicker+'</div><h2>'+L.title+'</h2>'+L.body+'<div class="try"><span class="chip">TRY IT →</span><div class="ab">';
-    L.actions.forEach(function(a,idx){ html+='<button class="btn" data-preset="'+a[1]+'">'+a[0]+'</button>'; });
-    html+='</div></div>';
-    var el=root.querySelector('#lesson'); el.innerHTML=html;
+    activeLesson=i; visited[i]=true;
+    var tabs=document.querySelectorAll('.tab');
+    for(var k=0;k<tabs.length;k++){
+      tabs[k].classList.toggle('on',k===i);
+      tabs[k].classList.toggle('done', !!visited[k] && k!==i);
+    }
+    var L=lessons[i];
+    var html='<div class="kick">'+L.kicker+' / 06</div><h2>'+L.title+'</h2>'+L.body+
+      '<div class="try"><span class="chip">LOAD A GROOVE →</span>';
+    L.actions.forEach(function(a){ html+='<button class="btn" data-preset="'+a[1]+'">'+a[0]+'</button>'; });
+    html+='</div><div class="lessonNav">';
+    html+= i>0 ? '<button class="btn" id="prevL">← '+lessons[i-1].tab+'</button>' : '<span></span>';
+    html+= i<lessons.length-1 ? '<button class="btn" id="nextL">'+lessons[i+1].tab+' →</button>' : '<span></span>';
+    html+='</div>';
+    var el=document.getElementById('lesson'); el.innerHTML=html;
     el.querySelectorAll('button[data-preset]').forEach(function(btn){
-      btn.addEventListener('click', function(){ loadPreset(btn.getAttribute('data-preset')); });
+      btn.addEventListener('click',function(){ loadPreset(btn.getAttribute('data-preset')); });
     });
+    var pv=document.getElementById('prevL'); if(pv) pv.addEventListener('click',function(){showLesson(i-1);});
+    var nx=document.getElementById('nextL'); if(nx) nx.addEventListener('click',function(){showLesson(i+1);});
+    lcd2('LESSON '+(i+1)+': '+L.tab.toUpperCase());
   }
 
   /* ---------- Controls ---------- */
   function wire(){
-    root.querySelector('#playBtn').addEventListener('click', function(){ isPlaying?stop():play(); });
-    root.querySelector('#bpm').addEventListener('input', function(e){ bpm=+e.target.value; root.querySelector('#bpmV').textContent=bpm; });
-    root.querySelector('#swing').addEventListener('input', function(e){ swing=+e.target.value; root.querySelector('#swingV').textContent=swing+'%'; });
-    root.querySelector('#hum').addEventListener('input', function(e){ humanize=+e.target.value; root.querySelector('#humV').textContent=humanize; });
-    root.querySelector('#qBtn').addEventListener('click', function(){ ensure(); setQ(!quantize); });
-    root.querySelector('#dustBtn').addEventListener('click', function(){ dustOn=!dustOn; this.classList.toggle('on',dustOn); toggleDust(dustOn); });
-    root.querySelector('#clearBtn').addEventListener('click', function(){ tracks.forEach(function(t){ t.steps=new Array(16).fill(0); }); paintAll(); });
-    root.querySelector('#recBtn').addEventListener('click', function(){ recOn=!recOn; this.classList.toggle('on',recOn); this.textContent=recOn?'● REC ON':'● REC OFF'; });
-    root.querySelector('#bankBtn').addEventListener('click', function(){ this.textContent = this.textContent==='BANK A'?'BANK A*':'BANK A'; });
-    // keyboard
-    window.addEventListener('keydown', function(e){
+    document.getElementById('playBtn').addEventListener('click',function(){ isPlaying?stop():play(); });
+    document.getElementById('bpm').addEventListener('input',function(e){ bpm=+e.target.value;
+      document.getElementById('bpmV').textContent=bpm; lcd1('STEP -- · '+bpm+' BPM'); });
+    document.getElementById('swing').addEventListener('input',function(e){ swing=+e.target.value;
+      document.getElementById('swingV').textContent=swing+'%'; lcd2('SWING '+swing+'%'); });
+    document.getElementById('hum').addEventListener('input',function(e){ humanize=+e.target.value;
+      document.getElementById('humV').textContent=humanize; lcd2('HUMANIZE '+humanize); });
+    document.getElementById('qBtn').addEventListener('click',function(){ ensure(); setQ(!quantize);
+      lcd2('QUANTIZE '+(quantize?'ON — MACHINE TIGHT':'OFF — HUMAN FEEL')); });
+    document.getElementById('dustBtn').addEventListener('click',function(){ dustOn=!dustOn;
+      this.classList.toggle('on',dustOn); toggleDust(dustOn); lcd2('DUST '+(dustOn?'ON':'OFF')); });
+    document.getElementById('clearBtn').addEventListener('click',function(){
+      tracks.forEach(function(t){t.steps=new Array(16).fill(0);}); paintAll(); lcd2('PATTERN CLEARED'); });
+    document.getElementById('recBtn').addEventListener('click',function(){ recOn=!recOn;
+      this.classList.toggle('on',recOn); this.textContent=recOn?'● REC ON':'● REC OFF';
+      lcd2(recOn?'REC ON — PADS WRITE TO GRID':'REC OFF'); });
+    document.getElementById('rollBtn').addEventListener('click',function(){ rollOn=!rollOn;
+      this.classList.toggle('on',rollOn); lcd2(rollOn?'ROLL ON — HOLD A PAD':'ROLL OFF'); });
+    document.getElementById('bankBtn').addEventListener('click',function(){ lcd2('ONE BANK IN THIS LAB — MORE SOON'); });
+    window.addEventListener('keydown',function(e){
       if(e.repeat) return;
-      var t=e.target; if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA')) return;
+      var t=e.target; if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA')) return;
       var k=e.key.toLowerCase();
       if(k===' '){ e.preventDefault(); isPlaying?stop():play(); return; }
       if(keyToPad.hasOwnProperty(k)){ e.preventDefault(); hitPad(keyToPad[k]); }
     });
+    window.addEventListener('keyup',function(e){
+      var k=e.key.toLowerCase();
+      if(keyToPad.hasOwnProperty(k) && heldPad===keyToPad[k]) heldPad=-1;
+    });
   }
 
   /* ---------- Boot ---------- */
-  buildTabs(); showLesson(0); buildRows(); buildPads(); wire();
-  loadPresetSilently('feel');
-  function loadPresetSilently(name){
-    var p=presets[name]; bpm=p.bpm; swing=p.swing; humanize=p.hum; quantize=p.quant;
-    tracks.forEach(function(tr,i){ tr.off=p.offs[i]||0; tr.steps=p.pat[tr.name]?P(p.pat[tr.name]):new Array(16).fill(0); });
-    syncControls(); paintAll();
-  }
+  buildTabs(); showLesson(0); buildLeds(); buildRows(); buildPads(); wire();
+  applyPreset('feel');
+  lcd2('READY — HIT PLAY OR BANG A PAD');
   requestAnimationFrame(drawLoop);
 })();
 </script>
-<!--WIDGET_END-->
 </body>
 </html>
