@@ -363,10 +363,11 @@
         <div class="pads" id="pads"></div>
         <div class="mrow">
           <button class="btn" id="bankBtn">BANK A</button>
+          <button class="btn tog" id="loadBtn" title="Tap LOAD, then tap a pad, then pick a sound from your device — it becomes that pad">LOAD</button>
           <button class="btn tog" id="rollBtn" title="While ON, held pads repeat as 16th-note rolls at the current swing">ROLL</button>
         </div>
         <div class="mfoot">
-          Pads stay live on every lesson — play them with:
+          <b>LOAD</b> puts <i>your</i> sound on a pad — or drag an audio file straight onto one. Pads stay live on every lesson — play them with:
           <div class="keysrow">
             <span class="keycap">1</span><span class="keycap">2</span><span class="keycap">3</span><span class="keycap">4</span>
             <span class="keycap">Q</span><span class="keycap">W</span><span class="keycap">E</span><span class="keycap">R</span>
@@ -399,6 +400,24 @@
       for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1;
     }
     if(ctx.state==='suspended') ctx.resume();
+    loadKit();
+  }
+  /* ---------- Sample kit + user sounds ---------- */
+  var kitBuf={}, userBuf={}, kitLoaded=false;
+  var KIT=['kick','subkick','snare','snareg','chat','ohat','clap','rim','lotom','hitom','conga','cow','ride','shaker','perc','zap'];
+  function loadKit(){
+    if(kitLoaded||!ctx) return; kitLoaded=true;
+    KIT.forEach(function(v){
+      fetch('kit/'+v+'.wav').then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+        .then(function(ab){ return ctx.decodeAudioData(ab); })
+        .then(function(buf){ kitBuf[v]=buf; })
+        .catch(function(){});
+    });
+  }
+  function playBuf(buf,t,v){
+    var s=ctx.createBufferSource(); s.buffer=buf;
+    var g=ctx.createGain(); g.gain.value=Math.min(1.2,Math.max(0.05,v));
+    s.connect(g); g.connect(master); s.start(Math.max(t,ctx.currentTime));
   }
   function nz(){ var s=ctx.createBufferSource(); s.buffer=noiseBuf; s.loop=true; return s; }
   function env(g,t,a,dur,peak){
@@ -467,6 +486,8 @@
     n.connect(f); f.connect(g); g.connect(master); n.start(t); n.stop(t+0.12);
   }
   function trigger(voice,t,v){
+    var b=userBuf[voice]||kitBuf[voice];
+    if(b){ playBuf(b,t,v); return; }
     switch(voice){
       case 'kick': vKick(t,v,false); break;
       case 'subkick': vKick(t,v,true); break;
@@ -575,9 +596,39 @@
   padDefs.forEach(function(p,i){ keyToPad[p.k.toLowerCase()]=i; });
   function voiceToTrack(voice){ for(var i=0;i<tracks.length;i++) if(tracks[i].voice===voice) return i; return -1; }
   function padCode(i){ return 'A'+((i+1)<10?'0'+(i+1):(i+1)); }
+  /* ---- user import (the Koala move) ---- */
+  var importArm=false, importTarget=-1;
+  var fileIn=document.createElement('input');
+  fileIn.type='file'; fileIn.accept='audio/*'; fileIn.style.display='none';
+  document.body.appendChild(fileIn);
+  fileIn.addEventListener('change',function(){
+    var f=fileIn.files[0]; if(f&&importTarget>=0) loadFileToPad(f,importTarget);
+    fileIn.value='';
+  });
+  function setImportArm(on){
+    importArm=on;
+    var b=document.getElementById('loadBtn');
+    if(b) b.classList.toggle('on',on);
+    lcd2(on?'LOAD ARMED — TAP A PAD':'LOAD OFF');
+  }
+  function loadFileToPad(f,i){
+    ensure();
+    var rd=new FileReader();
+    rd.onload=function(){
+      ctx.decodeAudioData(rd.result).then(function(buf){
+        userBuf[padDefs[i].v]=buf;
+        lcd2(padCode(i)+' ← '+(f.name||'YOUR SOUND').toUpperCase().slice(0,20));
+        var el=document.querySelectorAll('.pad')[i];
+        if(el){ el.classList.add('lit'); setTimeout(function(){el.classList.remove('lit');},350); }
+        trigger(padDefs[i].v, ctx.currentTime+0.02, 0.9);
+      }).catch(function(){ lcd2('COULD NOT READ THAT AUDIO'); });
+    };
+    rd.readAsArrayBuffer(f);
+  }
   function hitPad(i,vel){
     ensure();
     var p=padDefs[i]; if(!p) return;
+    if(importArm){ importTarget=i; setImportArm(false); fileIn.click(); return; }
     trigger(p.v, ctx.currentTime+0.001, vel||0.95);
     heldPad=i;
     document.getElementById('padLcd').textContent=padCode(i)+' — '+p.l.toUpperCase()+(rollOn?' · ROLL':'');
@@ -601,6 +652,13 @@
       d.addEventListener('mouseleave',function(){if(heldPad===i)heldPad=-1;});
       d.addEventListener('touchstart',function(e){e.preventDefault();hitPad(i);},{passive:false});
       d.addEventListener('touchend',function(){heldPad=-1;});
+      d.addEventListener('dragover',function(e){ e.preventDefault(); d.classList.add('lit'); });
+      d.addEventListener('dragleave',function(){ d.classList.remove('lit'); });
+      d.addEventListener('drop',function(e){
+        e.preventDefault(); d.classList.remove('lit');
+        var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+        if(f) loadFileToPad(f,i);
+      });
       host.appendChild(d);
     });
   }
@@ -790,6 +848,7 @@
       lcd2(recOn?'REC ON — PADS WRITE TO GRID':'REC OFF'); });
     document.getElementById('rollBtn').addEventListener('click',function(){ rollOn=!rollOn;
       this.classList.toggle('on',rollOn); lcd2(rollOn?'ROLL ON — HOLD A PAD':'ROLL OFF'); });
+    document.getElementById('loadBtn').addEventListener('click',function(){ setImportArm(!importArm); });
     document.getElementById('bankBtn').addEventListener('click',function(){ lcd2('ONE BANK IN THIS LAB — MORE SOON'); });
     window.addEventListener('keydown',function(e){
       if(e.repeat) return;
